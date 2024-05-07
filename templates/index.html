@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Upload</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        #uploadContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #fileInputLabel, #uploadButton {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        #fileInputLabel:hover, #uploadButton:hover {
+            background-color: #45a049;
+        }
+
+        #uploadButton {
+            flex: 0 0 auto;
+        }
+
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        #charts {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        canvas {
+            width: calc(50% - 20px); /* Set width to 50% of container minus margin */
+            max-width: 600px; /* Limit maximum width of canvas */
+            max-height: 300px; /* Set height of canvas */
+            margin: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload CSV File</h1>
+    <div id="uploadContainer">
+        <label id="fileInputLabel" for="fileInput">Choose File</label>
+        <input type="file" id="fileInput" accept=".csv">
+        <button id="uploadButton" onclick="upload()">Upload</button>
+    </div>
+    <div id="charts"></div>
+
+    <script>
+        function upload() {
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            var formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                var chartsDiv = document.getElementById('charts');
+                chartsDiv.innerHTML = '';
+
+                data['data'].forEach(studentData => {
+                    var canvas = document.createElement('canvas');
+                    chartsDiv.appendChild(canvas);
+
+                    var ctx = canvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: studentData['subjects'],
+                            datasets: [{
+                                label: studentData['name'],
+                                data: studentData['marks'],
+                                backgroundColor: 'rgba(54, 162, 235, 0.6)', // Blue color
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                borderWidth: 1
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100 // Set max value of y-axis to 100
+                                }
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
